@@ -272,6 +272,8 @@ void wm_window_close(bContext *C, wmWindowManager *wm, wmWindow *win)
 	
 	/* first check if we have to quit (there are non-temp remaining windows) */
 	for (tmpwin = wm->windows.first; tmpwin; tmpwin = tmpwin->next) {
+		tmpwin->eventstate->key_pressed = false; /* XXX better solution? */
+
 		if (tmpwin == win)
 			continue;
 		if (tmpwin->screen->temp == 0)
@@ -1092,6 +1094,30 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 	return 1;
 }
 
+/* GHOST doesn't send multiple KM_PRESS events while the mouse is pressed, but
+ * this is needed to correctly send KM_HOLD for the mouse.
+ * A bit hacky, but propably the best solution/workaround */
+static void wm_window_mouse_clicktype_set(const bContext *C)
+{
+	wmWindowManager *wm = CTX_wm_manager(C);
+
+	if (wm->winactive) {
+		wmWindow *win = wm->winactive;
+		wmEvent *event = win->eventstate;
+
+		if (ISMOUSE(event->type)) {
+			if (event->val == KM_PRESS) {
+				event->mouse_pressed = true;
+			}
+			else if (event->val == KM_RELEASE) {
+				event->mouse_pressed = false;
+			}
+
+			if (event->mouse_pressed)
+				wm_event_clicktype_set(win, NULL, event);
+		}
+	}
+}
 
 /* This timer system only gives maximum 1 timer event per redraw cycle,
  * to prevent queues to get overloaded.
@@ -1151,7 +1177,9 @@ void wm_window_process_events(const bContext *C)
 
 	if (hasevent)
 		GHOST_DispatchEvents(g_system);
-	
+
+	wm_window_mouse_clicktype_set(C);
+
 	hasevent |= wm_window_timer(C);
 
 	/* no event, we sleep 5 milliseconds */

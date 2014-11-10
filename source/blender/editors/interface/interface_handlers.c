@@ -1163,7 +1163,7 @@ static int ui_handler_region_drag_toggle(bContext *C, const wmEvent *event, void
 	switch (event->type) {
 		case LEFTMOUSE:
 		{
-			if (event->val != KM_PRESS) {
+			if (event->val == KM_RELEASE) {
 				done = true;
 			}
 			break;
