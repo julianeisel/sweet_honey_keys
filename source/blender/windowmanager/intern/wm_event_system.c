@@ -1457,7 +1457,7 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to 
 //	if (winevent->prevtype!= KM_HOLD && winevent->type == KM_HOLD)
 //		printf("test\n");
 
-#if 1
+#if 0
 //	if (winevent->val == KM_NOTHING) return 0;
 	if (kmi->val > KM_RELEASE) {
 //		if (winevent->origtype != kmi->type || kmi->val != winevent->clicktype) {printf("moar\n"); return 0;}
@@ -1466,12 +1466,13 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to 
 	}
 	else {
 #endif
+
 		if (kmitype != KM_ANY)
-			if (winevent->type != kmitype) return 0;
+			if (winevent->type != kmitype) {return 0; }
 
 		if (kmi->val != KM_ANY)
-			if (kmi->val != winevent->val) return 0;
-	}
+			if (!ELEM(kmi->val, winevent->val, winevent->clicktype)) {return 0;}
+//	}
 	
 	
 	/* modifiers also check bits, so it allows modifier order */
@@ -1488,6 +1489,7 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to 
 	/* that is currently needed to make overlapping events work (when you press A - G fast or so). */
 	if (kmi->keymodifier)
 		if (winevent->keymodifier != kmi->keymodifier) return 0;
+
 	
 	return 1;
 }
@@ -3036,7 +3038,7 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
 			retval = KM_CLICK;
 		}
 	}
-	else {
+	else if (event_state->key_pressed || (event && event->key_pressed)){
 		retval = KM_HOLD;
 	}
 
@@ -3058,9 +3060,10 @@ void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 	if (event) { /* if called from wm_window_mouse_clicktype_set, we don't have event */
 		if (event->val == KM_PRESS) {
 			if (event->key_pressed == false &&
-			    (event_state->prevval != KM_PRESS || (event->prevtype != win->eventstate->prevtype)))
+			    (event_state->prevval != KM_PRESS ||
+			     event->prevtype != win->eventstate->prevtype))
 			{
-				event_state->prevclicktime = event->clicktime;
+				event_state-> prevclicktime = event->clicktime;
 				event_state->clicktime = PIL_check_seconds_timer();
 
 				event_state->prevclickx = event->x;
@@ -3085,20 +3088,47 @@ void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 	else if (clicktype == KM_HOLD) str_print = "KM_HOLD";
 	else if (clicktype == KM_DBL_CLICK) str_print = "KM_DBL_CLICK";
 
-	if (!event && clicktype == KM_HOLD)
-		event = win->eventstate;
+//	if (!event && clicktype == KM_HOLD) {
+//		event = win->eventstate;
+//	}
+#if 0
+	if (event_state->prevclicktype /*&& event->clicktype*/ != clicktype) {
+		event_state->prevclicktype = event_state->clicktype;
+		event_state->clicktype = clicktype;
+//		printf("%i\n", event->clicktype);
+		if (event) {
+			event->prevclicktype = event->clicktype;
+			event->clicktype = clicktype;
+		}
 
-	if (event && clicktype != event->clicktype) {
-		if (str_print[0] && (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS)))
-			printf("%s Send %s\n", __func__, str_print);
-		event_state->clicktype = event->clicktype = clicktype;
+	}
+
+//	if (event && event->clicktype != clicktype) {
+//		event->clicktype = clicktype;
+//	}
+
+#else
+	if (event_state->clicktype  != clicktype || (event && clicktype != event->clicktype)) {
+		event_state->clicktype /*= event->clicktype */= clicktype;
+		if (event)
+			event->clicktype = clicktype;
+
+//		if (event_state->clicktype == KM_HOLD)
+//			printf("exit\n");
+
+//		printf("%s\n", str_print);
 
 		/* send the KM_HOLD (only needed for mouse, as it doesn't update until KM_RELEASE) */
-		if (ISMOUSE(event->type) && clicktype == KM_HOLD) {
+		if (event && ISMOUSE(event->type) && clicktype == KM_HOLD) {
 			event->val = KM_NOTHING;
 			wm_event_add_mousemove(win, event);
 		}
+		/* print clicktype in debug mode */
+		if (str_print[0] && (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS))) {
+			printf("%s Send %s\n", __func__, str_print);
+		}
 	}
+#endif
 }
 
 /* windows store own event queues, no bContext here */
@@ -3251,6 +3281,9 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			/* copy to event state */
 			evt->val = event.val;
 			evt->type = event.type;
+
+			if (type == GHOST_kEventKeyDown)
+				printf("ebbes\n");
 
 			/* clicktype */
 			wm_event_clicktype_set(win, &event, evt);
