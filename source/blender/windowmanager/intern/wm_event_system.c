@@ -3038,7 +3038,7 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
 			retval = KM_CLICK;
 		}
 	}
-	else if (event_state->key_pressed || (event && event->key_pressed)){
+	else {
 		retval = KM_HOLD;
 	}
 
@@ -3056,25 +3056,27 @@ void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 {
 	const char *str_print = "";
 	short clicktype;
+	
+	/* event -> neu
+	 * event_state = alt */
 
 	if (event) { /* if called from wm_window_mouse_clicktype_set, we don't have event */
-		if (event->val == KM_PRESS) {
-			if (event->key_pressed == false &&
-			    (event_state->prevval != KM_PRESS ||
-			     event->prevtype != win->eventstate->prevtype))
-			{
-				event_state-> prevclicktime = event->clicktime;
-				event_state->clicktime = PIL_check_seconds_timer();
+		if (event->key_pressed == false &&
+		    (event_state->prevval != KM_PRESS ||
+		     event->prevtype != win->eventstate->prevtype))
+		{
+			event_state-> prevclicktime = event->clicktime;
+			event_state->clicktime = PIL_check_seconds_timer();
 
-				event_state->prevclickx = event->x;
-				event_state->prevclicky = event->y;
-				event_state->prevclicktype = event->clicktype;
-
-				event_state->key_pressed = true;
-			}
+			event_state->prevclickx = event->x;
+			event_state->prevclicky = event->y;
+			event_state->prevclicktype = event->clicktype;
+			
+//			event_state->key_pressed = true;
 		}
-		else if (event->val == KM_RELEASE) {
-			event_state->key_pressed = false;
+
+		if (event->val == KM_RELEASE) {
+//			event_state->key_pressed = false;
 		}
 
 		if (event->type != event_state->prevtype) {
@@ -3088,35 +3090,13 @@ void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 	else if (clicktype == KM_HOLD) str_print = "KM_HOLD";
 	else if (clicktype == KM_DBL_CLICK) str_print = "KM_DBL_CLICK";
 
-//	if (!event && clicktype == KM_HOLD) {
-//		event = win->eventstate;
-//	}
-#if 0
-	if (event_state->prevclicktype /*&& event->clicktype*/ != clicktype) {
-		event_state->prevclicktype = event_state->clicktype;
-		event_state->clicktype = clicktype;
-//		printf("%i\n", event->clicktype);
-		if (event) {
-			event->prevclicktype = event->clicktype;
-			event->clicktype = clicktype;
-		}
-
+	if (event) {
+		event_state->clicktype = event->clicktype = clicktype;
 	}
 
-//	if (event && event->clicktype != clicktype) {
-//		event->clicktype = clicktype;
-//	}
-
-#else
-	if (event_state->clicktype  != clicktype || (event && clicktype != event->clicktype)) {
-		event_state->clicktype /*= event->clicktype */= clicktype;
-		if (event)
-			event->clicktype = clicktype;
-
-//		if (event_state->clicktype == KM_HOLD)
-//			printf("exit\n");
-
-//		printf("%s\n", str_print);
+#if 0
+	if (event_state->clicktype != clicktype) {
+		event_state->clicktype = event->clicktype = clicktype;
 
 		/* send the KM_HOLD (only needed for mouse, as it doesn't update until KM_RELEASE) */
 		if (event && ISMOUSE(event->type) && clicktype == KM_HOLD) {
@@ -3129,6 +3109,7 @@ void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 		}
 	}
 #endif
+//	printf("%i | %i\n", event_state->clicktype, clicktype);
 }
 
 /* windows store own event queues, no bContext here */
@@ -3232,7 +3213,7 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			evt->type = event.type;
 
 			/* clicktype */
-			wm_event_clicktype_set(win, &event, evt);
+//			wm_event_clicktype_set(win, &event, evt);
 
 			if (win->active == 0) {
 				int cx, cy;
@@ -3282,11 +3263,8 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			evt->val = event.val;
 			evt->type = event.type;
 
-			if (type == GHOST_kEventKeyDown)
-				printf("ebbes\n");
-
 			/* clicktype */
-			wm_event_clicktype_set(win, &event, evt);
+//			wm_event_clicktype_set(win, &event, evt);
 			
 			/* exclude arrow keys, esc, etc from text input */
 			if (type == GHOST_kEventKeyUp) {

@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "DNA_listBase.h"	
+#include "DNA_listBase.h"
 #include "DNA_screen_types.h"
 #include "DNA_windowmanager_types.h"
 
@@ -1094,6 +1094,39 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 	return 1;
 }
 
+static void wm_window_event_clicktype_set(wmWindow *win, wmEvent *event)
+{
+	short clicktype = 0;
+	
+	/* XXX event->key_pressed vs. event->prevval */
+	if (event->val == KM_PRESS && !event->key_pressed) {
+		event->key_pressed = true;
+		event->clicktime = PIL_check_seconds_timer();
+//		event->prevclicktype = event->clicktype;
+//		printf("so far so good\n");
+	}
+	else if (event->val == KM_RELEASE && event->key_pressed == true) {
+		event->key_pressed = false;
+//		printf("%f\n", (PIL_check_seconds_timer() - event->clicktime) * 100);
+	}
+	
+	if ((PIL_check_seconds_timer() - event->clicktime) * 100 <= U.click_timeout) {
+		if (event->val == KM_RELEASE) {
+			clicktype = KM_CLICK;
+		}
+	}
+	else if (event->key_pressed == true) {
+		clicktype = KM_HOLD;
+	}
+
+	if (event->clicktype != clicktype) {
+		event->clicktype = clicktype;
+		event->val = 0;
+		printf("%i\n", clicktype);
+		wm_event_add(win, event);
+	}
+}
+
 /* GHOST doesn't send multiple KM_PRESS events while the mouse is pressed, but
  * this is needed to correctly send KM_HOLD for the mouse.
  * A bit hacky, but propably the best solution/workaround */
@@ -1113,8 +1146,11 @@ static void wm_window_mouse_clicktype_set(const bContext *C)
 				event->mouse_pressed = false;
 			}
 
-			if (event->mouse_pressed)
-				wm_event_clicktype_set(win, NULL, event);
+//			if (event->mouse_pressed)
+//				wm_event_clicktype_set(win, NULL, event);
+		}
+		else {
+			wm_window_event_clicktype_set(win, event);
 		}
 	}
 }
