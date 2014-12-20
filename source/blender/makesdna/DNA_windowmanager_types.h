@@ -183,20 +183,25 @@ typedef struct wmWindow {
 	char screenname[64];        /* MAX_ID_NAME for matching window with active screen after file read */
 
 	short posx, posy, sizex, sizey;  /* window coords */
-	short windowstate;  /* borderless, full */
-	short monitor;      /* multiscreen... no idea how to store yet */
-	short active;       /* set to 1 if an active window, for quick rejects */
-	short cursor;       /* current mouse cursor type */
-	short lastcursor;   /* previous cursor when setting modal one */
-	short modalcursor;  /* the current modal cursor */
-	short grabcursor;           /* cursor grab mode */
-	short addmousemove; /* internal: tag this for extra mousemove event, makes cursors/buttons active on UI switching */
+	short windowstate;    /* borderless, full */
+	short monitor;        /* multiscreen... no idea how to store yet */
+	short active;         /* set to 1 if an active window, for quick rejects */
+	short cursor;         /* current mouse cursor type */
+	short lastcursor;     /* previous cursor when setting modal one */
+	short modalcursor;    /* the current modal cursor */
+	short grabcursor;     /* cursor grab mode */
+	short addmousemove;   /* internal: tag this for extra mousemove event, makes cursors/buttons active on UI switching */
+	short just_activated; /* if a window has just been activated this is true till the next event */
+	
+	short pad;
 
 	int winid;                  /* winid also in screens, is for retrieving this window after read */
 
 	short lock_pie_event;      /* internal, lock pie creation from this event until released */
 	short last_pie_event;      /* exception to the above rule for nested pies, store last pie event for operators
 	                            * that spawn a new pie right after destruction of last pie */
+
+	int pad2;
 
 	struct wmEvent *eventstate;   /* storage for event system */
 

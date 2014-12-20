@@ -272,8 +272,6 @@ void wm_window_close(bContext *C, wmWindowManager *wm, wmWindow *win)
 	
 	/* first check if we have to quit (there are non-temp remaining windows) */
 	for (tmpwin = wm->windows.first; tmpwin; tmpwin = tmpwin->next) {
-		tmpwin->eventstate->key_pressed = false; /* XXX better solution? */
-
 		if (tmpwin == win)
 			continue;
 		if (tmpwin->screen->temp == 0)
@@ -746,6 +744,11 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 			win = GHOST_GetWindowUserData(ghostwin);
 		}
 		
+		/* win->just_activated must only be true for one event */
+		if (win->just_activated) {
+			win->just_activated = true;
+		}
+		
 		switch (type) {
 			case GHOST_kEventWindowDeactivate:
 				wm_event_add_ghostevent(wm, win, type, time, data);
@@ -855,6 +858,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				win->eventstate->y = wy;
 				
 				win->addmousemove = 1;   /* enables highlighted buttons */
+				win->just_activated = true;
 				
 				wm_window_make_drawable(wm, win);
 
@@ -1094,63 +1098,49 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 	return 1;
 }
 
-static void wm_window_event_clicktype_set(wmWindow *win, wmEvent *event)
-{
-	short clicktype = 0;
-	
-	/* XXX event->key_pressed vs. event->prevval */
-	if (event->val == KM_PRESS && !event->key_pressed) {
-		event->key_pressed = true;
-		event->clicktime = PIL_check_seconds_timer();
-//		event->prevclicktype = event->clicktype;
-//		printf("so far so good\n");
-	}
-	else if (event->val == KM_RELEASE && event->key_pressed == true) {
-		event->key_pressed = false;
-//		printf("%f\n", (PIL_check_seconds_timer() - event->clicktime) * 100);
-	}
-	
-	if ((PIL_check_seconds_timer() - event->clicktime) * 100 <= U.click_timeout) {
-		if (event->val == KM_RELEASE) {
-			clicktype = KM_CLICK;
-		}
-	}
-	else if (event->key_pressed == true) {
-		clicktype = KM_HOLD;
-	}
-
-	if (event->clicktype != clicktype) {
-		event->clicktype = clicktype;
-		event->val = 0;
-		printf("%i\n", clicktype);
-		wm_event_add(win, event);
-	}
-}
-
 /* GHOST doesn't send multiple KM_PRESS events while the mouse is pressed, but
  * this is needed to correctly send KM_HOLD for the mouse.
  * A bit hacky, but propably the best solution/workaround */
-static void wm_window_mouse_clicktype_set(const bContext *C)
+static void wm_event_clicktype_set(const bContext *C)
 {
 	wmWindowManager *wm = CTX_wm_manager(C);
 
 	if (wm->winactive) {
 		wmWindow *win = wm->winactive;
 		wmEvent *event = win->eventstate;
+		short clicktype = 0;
 
-		if (ISMOUSE(event->type)) {
-			if (event->val == KM_PRESS) {
-				event->mouse_pressed = true;
-			}
-			else if (event->val == KM_RELEASE) {
-				event->mouse_pressed = false;
-			}
+		BLI_assert(event != NULL);
 
-//			if (event->mouse_pressed)
-//				wm_event_clicktype_set(win, NULL, event);
+		/* we always want clicktype of last clicked button */
+		if (event->val == KM_PRESS && event->type != event->keymodifier) {
+			event->is_key_pressed = false;
 		}
-		else {
-			wm_window_event_clicktype_set(win, event);
+
+		/* XXX event->key_pressed vs. event->prevval */
+		if (event->val == KM_PRESS && !event->is_key_pressed) {
+			event->is_key_pressed = true;
+			event->clicktime = PIL_check_seconds_timer();
+		}
+		else if (event->val == KM_RELEASE && event->is_key_pressed) {
+			event->is_key_pressed = false;
+		}
+
+		/* the actual test */
+		if ((PIL_check_seconds_timer() - event->clicktime) * 100 <= U.click_timeout) {
+			if (event->val == KM_RELEASE) {
+				clicktype = KM_CLICK;
+			}
+		}
+		else if (event->is_key_pressed) {
+			clicktype = KM_HOLD;
+		}
+
+		/* send event with new clicktype */
+		if (event->clicktype != clicktype) {
+			event->clicktype = clicktype;
+			event->val = 0;
+			wm_event_add(win, event);
 		}
 	}
 }
@@ -1214,7 +1204,7 @@ void wm_window_process_events(const bContext *C)
 	if (hasevent)
 		GHOST_DispatchEvents(g_system);
 
-	wm_window_mouse_clicktype_set(C);
+	wm_event_clicktype_set(C);
 
 	hasevent |= wm_window_timer(C);
 

@@ -436,12 +436,12 @@ typedef struct wmEvent {
 						 * BLI_str_utf8_size() must _always_ be valid, check
 						 * when assigning s we don't need to check on every access after */
 	char ascii;			/* from ghost, fallback if utf8 isn't set */
-	bool mouse_pressed;	/* true as long as a mouse key is pressed */
-	bool key_pressed;	/* true as long as a keyboard key is pressed */
+
+	bool is_key_pressed; /* is a (non-modifier) key is pressed? (keyboard, mouse, NDOF, ...) */
+
 	char pad;
 
 	/* previous state, used for val and clicktype */
-	short origtype; /* type that was sent on the first KM_PRESS */
 	short prevtype;
 	short prevval;
 	int prevx, prevy;

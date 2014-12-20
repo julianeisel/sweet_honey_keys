@@ -3052,16 +3052,12 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
  * KM_RELEASE && time < U.click_timeout → send KM_CLI CK
  * KM_PRESS && time > U.click_timeout → send KM_HOLD
  * KM_PRESS after a KM_RELEASE and time < U.dbl_click_time → send KM_DBL_CLICK */
-void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
+static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 {
-	const char *str_print = "";
 	short clicktype;
-	
-	/* event -> neu
-	 * event_state = alt */
 
 	if (event) { /* if called from wm_window_mouse_clicktype_set, we don't have event */
-		if (event->key_pressed == false &&
+		if (event->is_key_pressed == false &&
 		    (event_state->prevval != KM_PRESS ||
 		     event->prevtype != win->eventstate->prevtype))
 		{
@@ -3070,46 +3066,14 @@ void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 
 			event_state->prevclickx = event->x;
 			event_state->prevclicky = event->y;
-			event_state->prevclicktype = event->clicktype;
-			
-//			event_state->key_pressed = true;
-		}
-
-		if (event->val == KM_RELEASE) {
-//			event_state->key_pressed = false;
-		}
-
-		if (event->type != event_state->prevtype) {
-			event_state->origtype = event->type;
 		}
 	}
 
 	clicktype = wm_event_clicktype_get(event, event_state);
 
-	if (clicktype == KM_CLICK) str_print = "KM_CLICK";
-	else if (clicktype == KM_HOLD) str_print = "KM_HOLD";
-	else if (clicktype == KM_DBL_CLICK) str_print = "KM_DBL_CLICK";
-
 	if (event) {
 		event_state->clicktype = event->clicktype = clicktype;
 	}
-
-#if 0
-	if (event_state->clicktype != clicktype) {
-		event_state->clicktype = event->clicktype = clicktype;
-
-		/* send the KM_HOLD (only needed for mouse, as it doesn't update until KM_RELEASE) */
-		if (event && ISMOUSE(event->type) && clicktype == KM_HOLD) {
-			event->val = KM_NOTHING;
-			wm_event_add_mousemove(win, event);
-		}
-		/* print clicktype in debug mode */
-		if (str_print[0] && (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS))) {
-			printf("%s Send %s\n", __func__, str_print);
-		}
-	}
-#endif
-//	printf("%i | %i\n", event_state->clicktype, clicktype);
 }
 
 /* windows store own event queues, no bContext here */
