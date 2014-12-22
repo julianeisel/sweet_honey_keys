@@ -1114,7 +1114,6 @@ static void wm_window_event_clicktype_set(const bContext *C)
 		if (event->val == KM_PRESS && !event->is_key_pressed) {
 			event->is_key_pressed = true;
 			event->clicktime = PIL_check_seconds_timer();
-			event->val = 0;
 		}
 		else if (event->val == KM_RELEASE && event->is_key_pressed) {
 			event->is_key_pressed = false;
@@ -1128,6 +1127,7 @@ static void wm_window_event_clicktype_set(const bContext *C)
 		}
 		else if (event->is_key_pressed) {
 			clicktype = KM_HOLD;
+			event->val = 0;
 		}
 
 		/* send event with new clicktype */
