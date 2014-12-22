@@ -1454,25 +1454,11 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to 
 			if (ISKEYBOARD(winevent->type) && (winevent->ascii || winevent->utf8_buf[0])) return 1; 
 		}
 
-//	if (winevent->prevtype!= KM_HOLD && winevent->type == KM_HOLD)
-//		printf("test\n");
+	if (kmitype != KM_ANY)
+		if (winevent->type != kmitype) return 0;
 
-#if 0
-//	if (winevent->val == KM_NOTHING) return 0;
-	if (kmi->val > KM_RELEASE) {
-//		if (winevent->origtype != kmi->type || kmi->val != winevent->clicktype) {printf("moar\n"); return 0;}
-		if (winevent->type != kmi->type) return 0;
-		if (kmi->val != winevent->clicktype) /*{printf("%i\n", winevent->clicktype);*/ return 0;/*}*/
-	}
-	else {
-#endif
-
-		if (kmitype != KM_ANY)
-			if (winevent->type != kmitype) {return 0; }
-
-		if (kmi->val != KM_ANY)
-			if (!ELEM(kmi->val, winevent->val, winevent->clicktype)) {return 0;}
-//	}
+	if (kmi->val != KM_ANY)
+		if (!ELEM(kmi->val, winevent->val, winevent->clicktype)) return 0;
 	
 	
 	/* modifiers also check bits, so it allows modifier order */
@@ -3020,8 +3006,7 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
 {
 	short retval = 0;
 
-	if (event &&
-		event->type == event_state->prevtype &&
+	if (event->type == event_state->prevtype &&
 		event_state->prevval == KM_RELEASE &&
 		event->val == KM_PRESS)
 	{
@@ -3033,14 +3018,6 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
 			}
 		}
 	}
-	if ((PIL_check_seconds_timer() - event_state->clicktime) * 100 <= U.click_timeout) {
-		if (event && event->val == KM_RELEASE) {
-			retval = KM_CLICK;
-		}
-	}
-	else {
-		retval = KM_HOLD;
-	}
 
 	return retval;
 }
@@ -3051,27 +3028,24 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
  * Time is used to determine, what to send. It works as follows:
  * KM_RELEASE && time < U.click_timeout → send KM_CLI CK
  * KM_PRESS && time > U.click_timeout → send KM_HOLD
- * KM_PRESS after a KM_RELEASE and time < U.dbl_click_time → send KM_DBL_CLICK */
+ * KM_PRESS after a KM_RELEASE and time < U.dbl_click_time → send KM_DBL_CLICK
+ *
+ * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_set (wm_window.c) */
 static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
 {
 	short clicktype;
 
-	if (event) { /* if called from wm_window_mouse_clicktype_set, we don't have event */
-		if (event->is_key_pressed == false &&
-		    (event_state->prevval != KM_PRESS ||
-		     event->prevtype != win->eventstate->prevtype))
-		{
-			event_state-> prevclicktime = event->clicktime;
-			event_state->clicktime = PIL_check_seconds_timer();
-
-			event_state->prevclickx = event->x;
-			event_state->prevclicky = event->y;
-		}
+	if (event->val == KM_PRESS &&
+	    (event_state->prevval != KM_PRESS || event->prevtype != win->eventstate->prevtype))
+	{
+		event_state->prevclicktime = event->clicktime;
+		event_state->prevclickx = event->x;
+		event_state->prevclicky = event->y;
 	}
 
 	clicktype = wm_event_clicktype_get(event, event_state);
 
-	if (event) {
+	if (clicktype > 0) {
 		event_state->clicktype = event->clicktype = clicktype;
 	}
 }
@@ -3177,7 +3151,7 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			evt->type = event.type;
 
 			/* clicktype */
-//			wm_event_clicktype_set(win, &event, evt);
+			wm_event_clicktype_set(win, &event, evt);
 
 			if (win->active == 0) {
 				int cx, cy;
@@ -3228,8 +3202,8 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			evt->type = event.type;
 
 			/* clicktype */
-//			wm_event_clicktype_set(win, &event, evt);
-			
+			wm_event_clicktype_set(win, &event, evt);
+
 			/* exclude arrow keys, esc, etc from text input */
 			if (type == GHOST_kEventKeyUp) {
 				event.ascii = '\0';

@@ -722,7 +722,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 		GHOST_WindowHandle ghostwin = GHOST_GetEventWindow(evt);
 		GHOST_TEventDataPtr data = GHOST_GetEventData(evt);
 		wmWindow *win;
-		
+
 		/* Ghost now can call this function for life resizes, but it should return if WM didn't initialize yet.
 		 * Can happen on file read (especially full size window)  */
 		if ((wm->initialized & WM_INIT_WINDOW) == 0) {
@@ -742,11 +742,6 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 		}
 		else {
 			win = GHOST_GetWindowUserData(ghostwin);
-		}
-		
-		/* win->just_activated must only be true for one event */
-		if (win->just_activated) {
-			win->just_activated = true;
 		}
 		
 		switch (type) {
@@ -856,9 +851,8 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 
 				win->eventstate->x = wx;
 				win->eventstate->y = wy;
-				
+
 				win->addmousemove = 1;   /* enables highlighted buttons */
-				win->just_activated = true;
 				
 				wm_window_make_drawable(wm, win);
 
@@ -1098,10 +1092,10 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 	return 1;
 }
 
-/* GHOST doesn't send multiple KM_PRESS events while the mouse is pressed, but
- * this is needed to correctly send KM_HOLD for the mouse.
- * A bit hacky, but propably the best solution/workaround */
-static void wm_event_clicktype_set(const bContext *C)
+/* KM_DBL_CLICK is set in wm_event_clicktype_set (wm_event_system.c)
+ * Normally, this should be there too, but for KM_CLICK/KM_HOLD, we need a
+ * time precision of a few milliseconds, which we can't get from there */
+static void wm_window_event_clicktype_set(const bContext *C)
 {
 	wmWindowManager *wm = CTX_wm_manager(C);
 
@@ -1112,15 +1106,15 @@ static void wm_event_clicktype_set(const bContext *C)
 
 		BLI_assert(event != NULL);
 
-		/* we always want clicktype of last clicked button */
+		/* we always want clicktype of last clicked button (to enable use with modifier keys) */
 		if (event->val == KM_PRESS && event->type != event->keymodifier) {
 			event->is_key_pressed = false;
 		}
 
-		/* XXX event->key_pressed vs. event->prevval */
 		if (event->val == KM_PRESS && !event->is_key_pressed) {
 			event->is_key_pressed = true;
 			event->clicktime = PIL_check_seconds_timer();
+			event->val = 0;
 		}
 		else if (event->val == KM_RELEASE && event->is_key_pressed) {
 			event->is_key_pressed = false;
@@ -1139,7 +1133,7 @@ static void wm_event_clicktype_set(const bContext *C)
 		/* send event with new clicktype */
 		if (event->clicktype != clicktype) {
 			event->clicktype = clicktype;
-			event->val = 0;
+//			event->val = 0;
 			wm_event_add(win, event);
 		}
 	}
@@ -1204,7 +1198,9 @@ void wm_window_process_events(const bContext *C)
 	if (hasevent)
 		GHOST_DispatchEvents(g_system);
 
-	wm_event_clicktype_set(C);
+	/* not nice to have this here, but it's the only place
+	 * that can call it with the needed time precision */
+	wm_window_event_clicktype_set(C);
 
 	hasevent |= wm_window_timer(C);
 
