@@ -4270,7 +4270,7 @@ static void rna_def_userdef_input(BlenderRNA *brna)
 
 	prop = RNA_def_property(srna, "click_timeout", PROP_INT, PROP_NONE);
 	RNA_def_property_int_sdna(prop, NULL, "click_timeout");
-	RNA_def_property_range(prop, 0, 1000);
+	RNA_def_property_range(prop, 0, 10000);
 	RNA_def_property_ui_text(prop, "Click Timeout", "Time (in ms) to determine if a key is clicked or held");
 
 	prop = RNA_def_property(srna, "double_click_time", PROP_INT, PROP_NONE);

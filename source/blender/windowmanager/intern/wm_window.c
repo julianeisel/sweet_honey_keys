@@ -1120,7 +1120,7 @@ static void wm_window_event_clicktype_set(const bContext *C)
 		}
 
 		/* the actual test */
-		if ((PIL_check_seconds_timer() - event->clicktime) * 100 <= U.click_timeout) {
+		if ((PIL_check_seconds_timer() - event->clicktime) * 1000 <= U.click_timeout) {
 			if (event->val == KM_RELEASE) {
 				clicktype = KM_CLICK;
 			}
