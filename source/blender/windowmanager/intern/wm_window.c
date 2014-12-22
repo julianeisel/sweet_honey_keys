@@ -1133,7 +1133,6 @@ static void wm_window_event_clicktype_set(const bContext *C)
 		/* send event with new clicktype */
 		if (event->clicktype != clicktype) {
 			event->clicktype = clicktype;
-//			event->val = 0;
 			wm_event_add(win, event);
 		}
 	}

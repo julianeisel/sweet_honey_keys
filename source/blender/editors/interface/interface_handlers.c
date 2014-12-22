@@ -2695,7 +2695,7 @@ static void ui_do_but_textedit(bContext *C, uiBlock *block, uiBut *but, uiHandle
 				inbox = ui_searchbox_inside(data->searchbox, event->x, event->y);
 
 			/* for double click: we do a press again for when you first click on button (selects all text, no cursor pos) */
-			if (event->val == KM_PRESS || event->val == KM_DBL_CLICK) {
+			if (event->val == KM_PRESS || event->clicktype == KM_DBL_CLICK) {
 				float mx, my;
 
 				mx = event->x;
@@ -2720,7 +2720,7 @@ static void ui_do_but_textedit(bContext *C, uiBlock *block, uiBut *but, uiHandle
 			}
 			
 			/* only select a word in button if there was no selection before */
-			if (event->val == KM_DBL_CLICK && had_selection == false) {
+			if (event->clicktype == KM_DBL_CLICK && had_selection == false) {
 				ui_textedit_move(but, data, STRCUR_DIR_PREV, false, STRCUR_JUMP_DELIM);
 				ui_textedit_move(but, data, STRCUR_DIR_NEXT, true, STRCUR_JUMP_DELIM);
 				retval = WM_UI_HANDLER_BREAK;
@@ -4195,7 +4195,7 @@ static int ui_do_but_LISTROW(bContext *C, uiBut *but, uiHandleButtonData *data, 
 		 * editing field for editing list item names
 		 */
 		if ((ELEM(event->type, LEFTMOUSE, PADENTER, RETKEY) && event->val == KM_PRESS && event->ctrl) ||
-		    (event->type == LEFTMOUSE && event->val == KM_DBL_CLICK))
+		    (event->type == LEFTMOUSE && event->clicktype == KM_DBL_CLICK))
 		{
 			uiBut *labelbut = ui_but_list_row_text_activate(C, but, data, event, BUTTON_ACTIVATE_TEXT_EDITING);
 			if (labelbut) {
@@ -8427,7 +8427,7 @@ static int ui_handle_menu_event(
 				case YKEY:
 				case ZKEY:
 				{
-					if ((event->val  == KM_PRESS || event->val == KM_DBL_CLICK) &&
+					if ((event->val  == KM_PRESS || event->clicktype == KM_DBL_CLICK) &&
 					    (event->shift == 0) &&
 					    (event->ctrl  == 0) &&
 					    (event->oskey == 0))
@@ -8477,7 +8477,7 @@ static int ui_handle_menu_event(
 				uiSafetyRct *saferct = block->saferct.first;
 
 				if (ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE) &&
-				    ELEM(event->val, KM_PRESS, KM_DBL_CLICK))
+				    (event->val == KM_PRESS || event->clicktype == KM_DBL_CLICK))
 				{
 					if ((is_parent_menu == false) && (U.uiflag & USER_MENUOPENAUTO) == 0) {
 						/* for root menus, allow clicking to close */
@@ -8921,7 +8921,7 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 			case YKEY:
 			case ZKEY:
 			{
-				if ((event->val  == KM_PRESS || event->val == KM_DBL_CLICK) &&
+				if ((event->val  == KM_PRESS || event->clicktype == KM_DBL_CLICK) &&
 				    (event->shift == 0) &&
 				    (event->ctrl  == 0) &&
 				    (event->oskey == 0))
@@ -9032,7 +9032,7 @@ static int ui_handle_menus_recursive(
 
 			if (block->flag & UI_BLOCK_RADIAL)
 				retval = ui_pie_handler(C, event, menu);
-			else if (event->type == LEFTMOUSE || event->val != KM_DBL_CLICK)
+			else if (event->type == LEFTMOUSE || event->clicktype != KM_DBL_CLICK)
 				retval = ui_handle_menu_event(C, event, menu, level, is_parent_inside, is_parent_menu, is_floating);
 		}
 	}
