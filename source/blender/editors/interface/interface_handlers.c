@@ -4211,6 +4211,7 @@ static int ui_do_but_BLOCK(bContext *C, uiBut *but, uiHandleButtonData *data, co
 {
 	
 	if (data->state == BUTTON_STATE_HIGHLIGHT) {
+		
 		/* first handle click on icondrag type button */
 		if (event->type == LEFTMOUSE && but->dragpoin && event->val == KM_PRESS) {
 			if (ui_but_contains_point_px_icon(but, data->region, event)) {

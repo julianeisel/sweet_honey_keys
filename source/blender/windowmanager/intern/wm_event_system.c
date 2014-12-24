@@ -1440,7 +1440,8 @@ int WM_userdef_event_map(int kmitype)
 }
 
 
-static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to something more descriptive like wm_event_check_keymapitem_match */
+/* XXX rename to something more descriptive like wm_event_is_keymapitem_matching and use bool */
+static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi)
 {
 	int kmitype = WM_userdef_event_map(kmi->type);
 
@@ -1456,10 +1457,9 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to 
 
 	if (kmitype != KM_ANY)
 		if (winevent->type != kmitype) return 0;
-
+	
 	if (kmi->val != KM_ANY)
 		if (!ELEM(kmi->val, winevent->val, winevent->clicktype)) return 0;
-	
 	
 	/* modifiers also check bits, so it allows modifier order */
 	if (kmi->shift != KM_ANY)
@@ -1475,7 +1475,6 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi) /* XXX rename to 
 	/* that is currently needed to make overlapping events work (when you press A - G fast or so). */
 	if (kmi->keymodifier)
 		if (winevent->keymodifier != kmi->keymodifier) return 0;
-
 	
 	return 1;
 }

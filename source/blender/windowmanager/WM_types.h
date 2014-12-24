@@ -183,9 +183,9 @@ enum {
 #define KM_RELEASE	2
 
 /* clicktype */
-#define KM_CLICK		3	/* clicked key	(clicktime <= U.click_timeout) */
-#define KM_HOLD			4	/* held key		(clicktime >  U.click_timeout) */
-#define KM_DBL_CLICK	5	/* double click */
+#define KM_CLICK     3 /* clicked key (clicktime <= U.click_timeout) */
+#define KM_HOLD      4 /* held key    (clicktime >  U.click_timeout) */
+#define KM_DBL_CLICK 5 /* double click */
 
 /* ************** UI Handler ***************** */
 
@@ -423,6 +423,7 @@ typedef struct wmGesture {
 
 /* each event should have full modifier state */
 /* event comes from eventmanager and from keymap */
+/* XXX why is pad needed here? Seems like it can be removed */
 typedef struct wmEvent {
 	struct wmEvent *next, *prev;
 	
@@ -436,10 +437,11 @@ typedef struct wmEvent {
 						 * BLI_str_utf8_size() must _always_ be valid, check
 						 * when assigning s we don't need to check on every access after */
 	char ascii;			/* from ghost, fallback if utf8 isn't set */
+	char pad;
 
 	bool is_key_pressed; /* is a (non-modifier) key is pressed? (keyboard, mouse, NDOF, ...) */
 
-	/* previous state, used for val and clicktype */
+	/* previous state, used for clicktype */
 	short prevtype;
 	short prevval;
 	int prevx, prevy;

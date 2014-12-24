@@ -446,7 +446,7 @@ typedef struct UserDef {
 	
 	short gameflags;
 	short wheellinescroll;
-	short pad;
+	short pad2;
 	int uiflag, uiflag2;
 	int language;
 	short userpref, viewzoom;
@@ -528,7 +528,7 @@ typedef struct UserDef {
 	float gpencil_new_layer_col[4]; /* default color for newly created Grease Pencil layers */
 
 	short tweak_threshold;
-	char navigation_mode, pad2;
+	char navigation_mode, pad;
 
 	char author[80];	/* author name for file formats supporting it */
 

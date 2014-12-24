@@ -826,8 +826,6 @@ void ui_theme_init_default(void)
 	rgba_char_args_set(btheme->tui.xaxis, 220,   0,   0, 255);
 	rgba_char_args_set(btheme->tui.yaxis,   0, 220,   0, 255);
 	rgba_char_args_set(btheme->tui.zaxis,   0,   0, 220, 255);
-	
-	rgba_char_args_set(btheme->tui.wcol_tooltip.text, 255, 255, 255, 255);
 
 	btheme->tui.menu_shadow_fac = 0.5f;
 	btheme->tui.menu_shadow_width = 12;
