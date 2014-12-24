@@ -4211,7 +4211,6 @@ static int ui_do_but_BLOCK(bContext *C, uiBut *but, uiHandleButtonData *data, co
 {
 	
 	if (data->state == BUTTON_STATE_HIGHLIGHT) {
-		
 		/* first handle click on icondrag type button */
 		if (event->type == LEFTMOUSE && but->dragpoin && event->val == KM_PRESS) {
 			if (ui_but_contains_point_px_icon(but, data->region, event)) {
@@ -9068,10 +9067,22 @@ static int ui_region_handler(bContext *C, const wmEvent *event, void *UNUSED(use
 		retval = ui_handle_list_event(C, event, ar);
 
 	if (retval == WM_UI_HANDLER_CONTINUE) {
-		if (but)
+		if (but) {
 			retval = ui_handle_button_event(C, event, but);
-		else
-			retval = ui_handle_button_over(C, event, ar);
+		}
+		else {
+			/* let's make sure we really don't have a button
+			 * add a mouse move and try again!
+			 * - XXX some WM_event_add_mousemove calls may become unnecessary with this and can be removed */
+			WM_event_add_mousemove(C);
+			but = ui_but_find_active_in_region(ar);
+			if (but) {
+				retval = ui_handle_button_event(C, event, but);
+			}
+			else {
+				retval = ui_handle_button_over(C, event, ar);
+			}
+		}
 	}
 
 	/* re-enable tooltips */
