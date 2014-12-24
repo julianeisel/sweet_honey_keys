@@ -8189,7 +8189,7 @@ static int ui_handle_menu_event(
 
 #ifdef USE_DRAG_POPUP
 	if (menu->is_grab) {
-		if (event->type == LEFTMOUSE) {
+		if (event->type == LEFTMOUSE && event->val == KM_RELEASE) {
 			menu->is_grab = false;
 			retval = WM_UI_HANDLER_BREAK;
 		}
