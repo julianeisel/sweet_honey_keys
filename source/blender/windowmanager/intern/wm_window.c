@@ -1102,7 +1102,7 @@ static void wm_window_event_clicktype_set(const bContext *C)
 	if (wm->winactive) {
 		wmWindow *win = wm->winactive;
 		wmEvent *event = win->eventstate;
-		short clicktype = 0;
+		short clicktype = event->clicktype;
 
 		BLI_assert(event != NULL);
 
@@ -1127,6 +1127,8 @@ static void wm_window_event_clicktype_set(const bContext *C)
 		}
 		else if (event->is_key_pressed) {
 			clicktype = KM_HOLD;
+
+			/* the event we send in this case is a "dummy" event - don't send value */
 			event->val = 0;
 		}
 

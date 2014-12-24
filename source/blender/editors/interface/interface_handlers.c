@@ -2694,8 +2694,7 @@ static void ui_do_but_textedit(bContext *C, uiBlock *block, uiBut *but, uiHandle
 			if (data->searchbox)
 				inbox = ui_searchbox_inside(data->searchbox, event->x, event->y);
 
-			/* for double click: we do a press again for when you first click on button (selects all text, no cursor pos) */
-			if (event->val == KM_PRESS || event->clicktype == KM_DBL_CLICK) {
+			if (event->val == KM_PRESS) {
 				float mx, my;
 
 				mx = event->x;
@@ -8427,7 +8426,7 @@ static int ui_handle_menu_event(
 				case YKEY:
 				case ZKEY:
 				{
-					if ((event->val  == KM_PRESS || event->clicktype == KM_DBL_CLICK) &&
+					if ((event->val  == KM_PRESS) &&
 					    (event->shift == 0) &&
 					    (event->ctrl  == 0) &&
 					    (event->oskey == 0))
@@ -8921,7 +8920,7 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 			case YKEY:
 			case ZKEY:
 			{
-				if ((event->val  == KM_PRESS || event->clicktype == KM_DBL_CLICK) &&
+				if ((event->val  == KM_PRESS) &&
 				    (event->shift == 0) &&
 				    (event->ctrl  == 0) &&
 				    (event->oskey == 0))

@@ -439,8 +439,6 @@ typedef struct wmEvent {
 
 	bool is_key_pressed; /* is a (non-modifier) key is pressed? (keyboard, mouse, NDOF, ...) */
 
-	char pad;
-
 	/* previous state, used for val and clicktype */
 	short prevtype;
 	short prevval;

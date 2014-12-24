@@ -3045,7 +3045,7 @@ static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event
 
 	clicktype = wm_event_clicktype_get(event, event_state);
 
-	if (clicktype > 0) {
+	if (clicktype != event->clicktype) {
 		event_state->clicktype = event->clicktype = clicktype;
 	}
 }
