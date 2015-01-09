@@ -117,21 +117,21 @@ typedef struct ImageCacheKey {
 
 static unsigned int imagecache_hashhash(const void *key_v)
 {
-	const ImageCacheKey *key = (ImageCacheKey *) key_v;
+	const ImageCacheKey *key = key_v;
 	return key->index;
 }
 
 static bool imagecache_hashcmp(const void *a_v, const void *b_v)
 {
-	const ImageCacheKey *a = (ImageCacheKey *) a_v;
-	const ImageCacheKey *b = (ImageCacheKey *) b_v;
+	const ImageCacheKey *a = a_v;
+	const ImageCacheKey *b = b_v;
 
 	return (a->index != b->index);
 }
 
 static void imagecache_keydata(void *userkey, int *framenr, int *proxy, int *render_flags)
 {
-	ImageCacheKey *key = (ImageCacheKey *)userkey;
+	ImageCacheKey *key = userkey;
 
 	*framenr = IMA_INDEX_FRAME(key->index);
 	*proxy = IMB_PROXY_NONE;
@@ -365,6 +365,11 @@ Image *BKE_image_copy(Main *bmain, Image *ima)
 	Image *nima = image_alloc(bmain, ima->id.name + 2, ima->source, ima->type);
 
 	BLI_strncpy(nima->name, ima->name, sizeof(ima->name));
+	if (ima->id.lib && BLI_path_is_rel(ima->name)) {
+		/* If path is relative, and source is a lib, path is relative to lib file, not main one! */
+		BLI_path_abs(nima->name, ima->id.lib->filepath);
+		BLI_path_rel(nima->name, bmain->name);
+	}
 
 	nima->flag = ima->flag;
 	nima->tpageflag = ima->tpageflag;
