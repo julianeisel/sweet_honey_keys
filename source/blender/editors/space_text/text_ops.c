@@ -2663,8 +2663,10 @@ static int text_set_selection_modal(bContext *C, wmOperator *op, const wmEvent *
 		case LEFTMOUSE:
 		case MIDDLEMOUSE:
 		case RIGHTMOUSE:
-			text_cursor_set_exit(C, op);
-			return OPERATOR_FINISHED;
+			if (event->val != 0) {
+				text_cursor_set_exit(C, op);
+				return OPERATOR_FINISHED;
+			}
 		case TIMER:
 		case MOUSEMOVE:
 			text_cursor_set_apply(C, op, event);
