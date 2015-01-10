@@ -2163,6 +2163,11 @@ static int text_scroll_modal(bContext *C, wmOperator *op, const wmEvent *event)
 		case LEFTMOUSE:
 		case RIGHTMOUSE:
 		case MIDDLEMOUSE:
+			/* don't exit on dummy events */
+			if (event->val == 0) {
+				return OPERATOR_RUNNING_MODAL;
+			}
+
 			if (ELEM(tsc->zone, SCROLLHANDLE_MIN_OUTSIDE, SCROLLHANDLE_MAX_OUTSIDE)) {
 				txt_screen_skip(st, ar, st->viewlines * (tsc->zone == SCROLLHANDLE_MIN_OUTSIDE ? 1 : -1));
 
