@@ -8861,6 +8861,9 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 
 		switch (event->type) {
 			case MOUSEMOVE:
+				if (event->x == event->prevx && event->y == event->prevy)
+					break;
+
 				if (!is_click_style) {
 					float len_sq = len_squared_v2v2(event_xy, block->pie_data.pie_center_init);
 
