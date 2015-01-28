@@ -22,11 +22,12 @@ from bpy.types import Panel, Menu
 from rna_prop_ui import PropertyPanel
 from bpy.app.translations import pgettext_iface as iface_
 
-from bl_ui.properties_physics_common import (point_cache_ui,
-                                             effector_weights_ui,
-                                             basic_force_field_settings_ui,
-                                             basic_force_field_falloff_ui,
-                                             )
+from bl_ui.properties_physics_common import (
+        point_cache_ui,
+        effector_weights_ui,
+        basic_force_field_settings_ui,
+        basic_force_field_falloff_ui,
+        )
 
 
 def particle_panel_enabled(context, psys):
@@ -361,11 +362,6 @@ class PARTICLE_PT_hair_dynamics(ParticleButtonsPanel, Panel):
         sub.prop(cloth, "density_target", text="Density Target")
         sub.prop(cloth, "density_strength", slider=True, text="Strength")
         col.prop(cloth, "voxel_cell_size")
-        sub = col.column(align=True)
-        sub.prop(cloth, "debug1")
-        sub.prop(cloth, "debug2")
-        sub.prop(cloth, "debug3")
-        sub.prop(cloth, "debug4")
 
         split.separator()
 
@@ -381,7 +377,6 @@ class PARTICLE_PT_hair_dynamics(ParticleButtonsPanel, Panel):
 
         row = col.row()
         row.prop(psys.settings, "show_hair_grid", text="HairGrid")
-        row.prop(cloth_md, "show_debug_data", text="Debug")
 
         if result:
             box = layout.box()

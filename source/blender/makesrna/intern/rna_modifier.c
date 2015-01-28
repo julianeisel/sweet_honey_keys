@@ -611,7 +611,7 @@ static void rna_MultiresModifier_filepath_set(PointerRNA *ptr, const char *value
 	Object *ob = (Object *)ptr->id.data;
 	CustomDataExternal *external = ((Mesh *)ob->data)->ldata.external;
 
-	if (external && strcmp(external->filename, value)) {
+	if (external && !STREQ(external->filename, value)) {
 		BLI_strncpy(external->filename, value, sizeof(external->filename));
 		multires_force_external_reload(ob);
 	}
@@ -718,28 +718,6 @@ static int rna_LaplacianDeformModifier_is_bind_get(PointerRNA *ptr)
 {
 	LaplacianDeformModifierData *lmd = (LaplacianDeformModifierData *)ptr->data;
 	return ((lmd->flag & MOD_LAPLACIANDEFORM_BIND) && (lmd->cache_system != NULL));
-}
-
-static int rna_ClothModifier_show_debug_data_get(PointerRNA *ptr)
-{
-	ClothModifierData *clmd = (ClothModifierData *)ptr->data;
-	return clmd->debug_data != NULL;
-}
-
-static void rna_ClothModifier_show_debug_data_set(PointerRNA *ptr, int value)
-{
-	ClothModifierData *clmd = (ClothModifierData *)ptr->data;
-	if (value) {
-		if (!clmd->debug_data) {
-			clmd->debug_data = BKE_sim_debug_data_new();
-		}
-	}
-	else {
-		if (clmd->debug_data) {
-			BKE_sim_debug_data_free(clmd->debug_data);
-			clmd->debug_data = NULL;
-		}
-	}
 }
 
 /* NOTE: Curve and array modifiers requires curve path to be evaluated,
@@ -2496,11 +2474,6 @@ static void rna_def_modifier_cloth(BlenderRNA *brna)
 	prop = RNA_def_property(srna, "point_cache", PROP_POINTER, PROP_NONE);
 	RNA_def_property_flag(prop, PROP_NEVER_NULL);
 	RNA_def_property_ui_text(prop, "Point Cache", "");
-	
-	prop = RNA_def_property(srna, "show_debug_data", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_funcs(prop, "rna_ClothModifier_show_debug_data_get", "rna_ClothModifier_show_debug_data_set");
-	RNA_def_property_ui_text(prop, "Debug", "Show debug info");
-	RNA_def_property_update(prop, 0, "rna_Modifier_update");
 
 	prop = RNA_def_property(srna, "hair_grid_min", PROP_FLOAT, PROP_NONE);
 	RNA_def_property_float_sdna(prop, NULL, "hair_grid_min");

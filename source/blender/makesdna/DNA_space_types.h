@@ -934,7 +934,7 @@ typedef struct bNodeTreePath {
 	bNodeInstanceKey parent_key;	/* base key for nodes in this tree instance */
 	int pad;
 	float view_center[2];			/* v2d center point, so node trees can have different offsets in editors */
-	/* XXX this is not automatically updated when node names are changed! */
+	
 	char node_name[64];		/* MAX_NAME */
 } bNodeTreePath;
 
@@ -1201,6 +1201,9 @@ typedef enum eSpace_Type {
 	
 	SPACEICONMAX = SPACE_CLIP
 } eSpace_Type;
+
+/* use for function args */
+#define SPACE_TYPE_ANY -1
 
 // TODO: SPACE_SCRIPT
 #if (DNA_DEPRECATED_GCC_POISON == 1)

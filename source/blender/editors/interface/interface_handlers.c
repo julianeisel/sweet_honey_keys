@@ -114,6 +114,7 @@
 static void ui_but_smart_controller_add(bContext *C, uiBut *from, uiBut *to);
 static void ui_but_link_add(bContext *C, uiBut *from, uiBut *to);
 static int ui_do_but_EXIT(bContext *C, uiBut *but, struct uiHandleButtonData *data, const wmEvent *event);
+static bool ui_but_find_select_in_enum__cmp(const uiBut *but_a, const uiBut *but_b);
 
 #ifdef USE_KEYNAV_LIMIT
 static void ui_mouse_motion_keynav_init(struct uiKeyNavLock *keynav, const wmEvent *event);
@@ -2754,7 +2755,7 @@ static void ui_do_but_textedit(bContext *C, uiBlock *block, uiBut *but, uiHandle
 			case VKEY:
 			case XKEY:
 			case CKEY:
-				if (event->ctrl || event->oskey) {
+				if (IS_EVENT_MOD(event, ctrl, oskey)) {
 					if (event->type == VKEY)
 						changed = ui_textedit_copypaste(but, data, UI_TEXTEDIT_PASTE);
 					else if (event->type == CKEY)
@@ -2827,10 +2828,10 @@ static void ui_do_but_textedit(bContext *C, uiBlock *block, uiBut *but, uiHandle
 				/* Ctrl + A: Select all */
 #if defined(__APPLE__)
 				/* OSX uses cmd-a systemwide, so add it */
-				if ((event->oskey && !(event->alt || event->shift || event->ctrl)) ||
-				    (event->ctrl  && !(event->alt || event->shift || event->oskey)))
+				if ((event->oskey && !IS_EVENT_MOD(event, shift, alt, ctrl)) ||
+				    (event->ctrl && !IS_EVENT_MOD(event, shift, alt, oskey)))
 #else
-				if (event->ctrl && !(event->alt || event->shift || event->oskey))
+				if (event->ctrl && !IS_EVENT_MOD(event, shift, alt, oskey))
 #endif
 				{
 					ui_textedit_move(but, data, STRCUR_DIR_PREV,
@@ -2853,7 +2854,7 @@ static void ui_do_but_textedit(bContext *C, uiBlock *block, uiBut *but, uiHandle
 					update = true;  /* do live update for tab key */
 				}
 				/* the hotkey here is not well defined, was G.qual so we check all */
-				else if (event->shift || event->ctrl || event->alt || event->oskey) {
+				else if (IS_EVENT_MOD(event, shift, ctrl, alt, oskey)) {
 					ui_textedit_prev_but(block, but, data);
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 				}
@@ -3346,6 +3347,38 @@ static int ui_do_but_TOG(bContext *C, uiBut *but, uiHandleButtonData *data, cons
 #endif
 			button_activate_state(C, but, BUTTON_STATE_EXIT);
 			return WM_UI_HANDLER_BREAK;
+		}
+		else if (ELEM(event->type, WHEELDOWNMOUSE, WHEELUPMOUSE) && event->alt) {
+			/* Support alt+wheel on expanded enum rows */
+			if (but->type == UI_BTYPE_ROW) {
+				const int direction = (event->type == WHEELDOWNMOUSE) ? -1 : 1;
+				uiBut *but_select = ui_but_find_select_in_enum(but, direction);
+				if (but_select) {
+					uiBut *but_other = (direction == -1) ? but_select->next : but_select->prev;
+					if (but_other && ui_but_find_select_in_enum__cmp(but, but_other)) {
+						ARegion *ar = data->region;
+
+						data->cancel = true;
+						button_activate_exit(C, but, data, false, false);
+
+						/* Activate the text button. */
+						button_activate_init(C, ar, but_other, BUTTON_ACTIVATE_OVER);
+						data = but_other->active;
+						if (data) {
+							ui_apply_but(C, but->block, but_other, but_other->active, true);
+							button_activate_exit(C, but_other, data, false, false);
+
+							/* restore active button */
+							button_activate_init(C, ar, but, BUTTON_ACTIVATE_OVER);
+						}
+						else {
+							/* shouldn't happen */
+							BLI_assert(0);
+						}
+					}
+				}
+				return WM_UI_HANDLER_BREAK;
+			}
 		}
 	}
 	return WM_UI_HANDLER_CONTINUE;
@@ -6259,7 +6292,9 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
 
 	if ((data->state == BUTTON_STATE_HIGHLIGHT) || (event->type == EVT_DROP)) {
 		/* handle copy-paste */
-		if (ELEM(event->type, CKEY, VKEY) && event->val == KM_PRESS && (event->ctrl || event->oskey)) {
+		if (ELEM(event->type, CKEY, VKEY) && event->val == KM_PRESS &&
+		    IS_EVENT_MOD(event, ctrl, oskey))
+		{
 			/* Specific handling for listrows, we try to find their overlapping tex button. */
 			if (but->type == UI_BTYPE_LISTROW) {
 				uiBut *labelbut = ui_but_list_row_text_activate(C, but, data, event, BUTTON_ACTIVATE_OVER);
@@ -6278,7 +6313,7 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
 		}
 		/* handle eyedropper */
 		else if ((event->type == EKEY) && (event->val == KM_PRESS)) {
-			if (event->alt || event->shift || event->ctrl || event->oskey) {
+			if (IS_EVENT_MOD(event, shift, ctrl, alt, oskey)) {
 				/* pass */
 			}
 			else {
@@ -6310,7 +6345,7 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
 		}
 		/* handle keyframing */
 		else if ((event->type == IKEY) &&
-		         !ELEM(KM_MOD_FIRST, event->ctrl, event->oskey) &&
+		         !IS_EVENT_MOD(event, ctrl, oskey) &&
 		         (event->val == KM_PRESS))
 		{
 			if (event->alt) {
@@ -6331,7 +6366,7 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
 		}
 		/* handle drivers */
 		else if ((event->type == DKEY) &&
-		         !ELEM(KM_MOD_FIRST, event->ctrl, event->oskey, event->shift) &&
+		         !IS_EVENT_MOD(event, shift, ctrl, oskey) &&
 		         (event->val == KM_PRESS))
 		{
 			if (event->alt)
@@ -6345,7 +6380,7 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
 		}
 		/* handle keyingsets */
 		else if ((event->type == KKEY) &&
-		         !ELEM(KM_MOD_FIRST, event->ctrl, event->oskey, event->shift) &&
+		         !IS_EVENT_MOD(event, shift, ctrl, oskey) &&
 		         (event->val == KM_PRESS))
 		{
 			if (event->alt)
@@ -6358,7 +6393,10 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
 			return WM_UI_HANDLER_BREAK;
 		}
 		/* handle menu */
-		else if (event->type == RIGHTMOUSE && event->val == KM_PRESS) {
+		else if ((event->type == RIGHTMOUSE) &&
+		         !IS_EVENT_MOD(event, shift, ctrl, alt, oskey) &&
+		         (event->val == KM_PRESS))
+		{
 			/* RMB has two options now */
 			if (ui_but_menu(C, but)) {
 				return WM_UI_HANDLER_BREAK;
@@ -6594,6 +6632,45 @@ static bool ui_but_isect_pie_seg(uiBlock *block, uiBut *but)
 		return true;
 
 	return false;
+}
+
+static bool ui_but_find_select_in_enum__cmp(const uiBut *but_a, const uiBut *but_b)
+{
+	return ((but_a->type == but_b->type) &&
+	        (but_a->alignnr == but_b->alignnr) &&
+	        (but_a->poin == but_b->poin) &&
+	        (but_a->rnapoin.type == but_b->rnapoin.type) &&
+	        (but_a->rnaprop == but_b->rnaprop));
+}
+
+/**
+ * Finds the pressed button in an aligned row (typically an expanded enum).
+ *
+ * \param direction  Use when there may be multiple buttons pressed.
+ */
+uiBut *ui_but_find_select_in_enum(uiBut *but, int direction)
+{
+	uiBut *but_iter = but;
+	uiBut *but_found = NULL;
+	BLI_assert(ELEM(direction, -1, 1));
+
+	while ((but_iter->prev) &&
+	       ui_but_find_select_in_enum__cmp(but_iter->prev, but))
+	{
+		but_iter = but_iter->prev;
+	}
+
+	while (but_iter && ui_but_find_select_in_enum__cmp(but_iter, but)) {
+		if (but_iter->flag & UI_SELECT) {
+			but_found = but_iter;
+			if (direction == 1) {
+				break;
+			}
+		}
+		but_iter = but_iter->next;
+	}
+
+	return but_found;
 }
 
 uiBut *ui_but_find_active_in_region(ARegion *ar)
@@ -8306,7 +8383,7 @@ static int ui_handle_menu_event(
 				case WHEELDOWNMOUSE:
 				case MOUSEPAN:
 					/* arrowkeys: only handle for block_loop blocks */
-					if (event->alt || event->shift || event->ctrl || event->oskey) {
+					if (IS_EVENT_MOD(event, shift, ctrl, alt, oskey)) {
 						/* pass */
 					}
 					else if (inside || (block->flag & UI_BLOCK_LOOP)) {
@@ -8450,10 +8527,8 @@ static int ui_handle_menu_event(
 				case YKEY:
 				case ZKEY:
 				{
-					if ((event->val  == KM_PRESS) &&
-					    (event->shift == 0) &&
-					    (event->ctrl  == 0) &&
-					    (event->oskey == 0))
+					if ((event->val  == KM_PRESS || event->val == KM_DBL_CLICK) &&
+					    !IS_EVENT_MOD(event, shift, ctrl, oskey))
 					{
 						if (ui_menu_pass_event_to_parent_if_nonactive(menu, but, level, retval))
 							break;
@@ -8947,10 +9022,7 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 			case YKEY:
 			case ZKEY:
 			{
-				if ((event->val  == KM_PRESS) &&
-				    (event->shift == 0) &&
-				    (event->ctrl  == 0) &&
-				    (event->oskey == 0))
+				if (event->val  == KM_PRESS && !IS_EVENT_MOD(event, shift, ctrl, oskey))
 				{
 					for (but = block->buttons.first; but; but = but->next) {
 						if (but->menu_key == event->type) {
@@ -9143,13 +9215,13 @@ static void ui_region_handler_remove(bContext *C, void *UNUSED(userdata))
 		ui_apply_but_funcs_after(C);
 }
 
+/* handle buttons at the window level, modal, for example while
+ * number sliding, text editing, or when a menu block is open */
 static int ui_handler_region_menu(bContext *C, const wmEvent *event, void *UNUSED(userdata))
 {
 	ARegion *ar;
 	uiBut *but;
 
-	/* here we handle buttons at the window level, modal, for example
-	 * while number sliding, text editing, or when a menu block is open */
 	ar = CTX_wm_menu(C);
 	if (!ar)
 		ar = CTX_wm_region(C);
@@ -9157,13 +9229,32 @@ static int ui_handler_region_menu(bContext *C, const wmEvent *event, void *UNUSE
 	but = ui_but_find_active_in_region(ar);
 
 	if (but) {
+		bScreen *screen = CTX_wm_screen(C);
+		ARegion *ar_temp;
 		uiBut *but_other;
 		uiHandleButtonData *data;
+		bool is_inside_menu = false;
+
+		/* look for a popup menu containing the mouse */
+		for (ar_temp = screen->regionbase.first; ar_temp; ar_temp = ar_temp->next) {
+			rcti rect = ar_temp->winrct;
+
+			/* resize region rect to ignore shadow */
+			BLI_rcti_resize(&rect, (BLI_rcti_size_x(&ar_temp->winrct) - UI_ThemeMenuShadowWidth() * 2),
+			                (BLI_rcti_size_y(&ar_temp->winrct) - UI_ThemeMenuShadowWidth() * 2));
+			if (BLI_rcti_isect_pt_v(&rect, &event->x)) {
+				BLI_assert(ar_temp->type->regionid == RGN_TYPE_TEMPORARY);
+
+				is_inside_menu = true;
+				break;
+			}
+		}
 
 		/* handle activated button events */
 		data = but->active;
 
 		if ((data->state == BUTTON_STATE_MENU_OPEN) &&
+		    (is_inside_menu == false) && /* make sure mouse isn't inside another menu (see T43247) */
 		    (but->type == UI_BTYPE_PULLDOWN) &&
 		    (but_other = ui_but_find_mouse_over(ar, event)) &&
 		    (but != but_other) &&

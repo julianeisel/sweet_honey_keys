@@ -162,15 +162,15 @@ static void view3d_draw_clipping(RegionView3D *rv3d)
 
 		/* fill in zero alpha for rendering & re-projection [#31530] */
 		unsigned char col[4];
-		UI_GetThemeColorShade3ubv(TH_BACK, -8, col);
-		col[3] = 0;
+		UI_GetThemeColor4ubv(TH_V3D_CLIPPING_BORDER, col);
 		glColor4ubv(col);
 
+		glEnable(GL_BLEND);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, bb->vec);
 		glDrawElements(GL_QUADS, sizeof(clipping_index) / sizeof(unsigned int), GL_UNSIGNED_INT, clipping_index);
 		glDisableClientState(GL_VERTEX_ARRAY);
-
+		glDisable(GL_BLEND);
 	}
 }
 
@@ -3089,15 +3089,6 @@ void ED_view3d_draw_offscreen(Scene *scene, View3D *v3d, ARegion *ar, int winx, 
 	G.f &= ~G_RENDER_OGL;
 }
 
-/* get a color used for offscreen sky, returns color in sRGB space */
-void ED_view3d_offscreen_sky_color_get(Scene *scene, float sky_color[3])
-{
-	if (scene->world)
-		linearrgb_to_srgb_v3_v3(sky_color, &scene->world->horr);
-	else
-		UI_GetThemeColor3fv(TH_BACK, sky_color);
-}
-
 /* utility func for ED_view3d_draw_offscreen */
 ImBuf *ED_view3d_draw_offscreen_imbuf(Scene *scene, View3D *v3d, ARegion *ar, int sizex, int sizey, unsigned int flag,
                                       bool draw_background, int alpha_mode, char err_out[256])
@@ -3580,9 +3571,13 @@ void view3d_main_area_draw(const bContext *C, ARegion *ar)
 	/* draw viewport using opengl */
 	if (v3d->drawtype != OB_RENDER || !view3d_main_area_do_render_draw(scene) || clip_border) {
 		view3d_main_area_draw_objects(C, scene, v3d, ar, &grid_unit);
+		
 #ifdef DEBUG_DRAW
 		bl_debug_draw();
 #endif
+		if (G.debug & G_DEBUG_SIMDATA)
+			draw_sim_debug_data(scene, v3d, ar);
+		
 		ED_region_pixelspace(ar);
 	}
 

@@ -22,7 +22,6 @@ from bpy.types import Header, Menu, Panel
 from bl_ui.properties_grease_pencil_common import GreasePencilDataPanel, GreasePencilToolsPanel
 from bpy.app.translations import pgettext_iface as iface_
 
-from bl_ui.properties_data_camera import draw_display_safe_settings
 
 def act_strip(context):
     try:
@@ -930,6 +929,7 @@ class SEQUENCER_PT_proxy(SequencerButtonsPanel, Panel):
             row.prop(strip.proxy, "build_50")
             row.prop(strip.proxy, "build_75")
             row.prop(strip.proxy, "build_100")
+            layout.prop(strip.proxy, "use_overwrite");
 
             col = layout.column()
             col.label(text="Build JPEG quality")
@@ -1000,10 +1000,13 @@ class SEQUENCER_PT_view_safe_areas(SequencerButtonsPanel_Output, Panel):
         self.layout.prop(st, "show_safe_areas", text="")
 
     def draw(self, context):
+        from bl_ui.properties_data_camera import draw_display_safe_settings
+
         layout = self.layout
         st = context.space_data
+        safe_data = context.scene.safe_areas
 
-        draw_display_safe_settings(layout, st)
+        draw_display_safe_settings(layout, safe_data, st)
 
 
 class SEQUENCER_PT_modifiers(SequencerButtonsPanel, Panel):
