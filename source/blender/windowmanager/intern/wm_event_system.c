@@ -3027,9 +3027,9 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
  *
  * We have 3 different clicktypes: 'KM_CLICK', 'KM_HOLD' and 'KM_DBL_CLICK'.
  * Time is used to determine, what to send. It works as follows:
- * KM_RELEASE && time < U.click_timeout → send KM_CLI CK
- * KM_PRESS && time > U.click_timeout → send KM_HOLD
- * KM_PRESS after a KM_RELEASE and time < U.dbl_click_time → send KM_DBL_CLICK
+ * KM_RELEASE && time since first KM_PRESS < U.click_timeout → send KM_CLICK
+ * KM_PRESS && time since first KM_PRESS > U.click_timeout → send KM_HOLD
+ * KM_PRESS after a KM_RELEASE && time since previous KM_PRESS < U.dbl_click_time → send KM_DBL_CLICK
  *
  * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_set (wm_window.c) */
 static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)

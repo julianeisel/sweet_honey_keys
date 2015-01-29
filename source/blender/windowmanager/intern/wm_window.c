@@ -1106,8 +1106,8 @@ static void wm_window_event_clicktype_set(const bContext *C)
 
 		BLI_assert(event != NULL);
 
-		/* we always want clicktype of last clicked button (to enable use with modifier keys)
-		 * unnecessary for mouse though*/
+		/* we always want clicktype of last clicked button (to enable
+		 * use with modifier keys) - unnecessary for mouse though*/
 		if (!ISMOUSE(event->type) &&
 		    event->val == KM_PRESS &&
 		    event->type != event->keymodifier)
