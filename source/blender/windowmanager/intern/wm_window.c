@@ -1126,10 +1126,16 @@ static void wm_window_event_clicktype_set(const bContext *C)
 		if ((PIL_check_seconds_timer() - event->clicktime) * 1000 <= U.click_timeout) {
 			if (event->val == KM_RELEASE) {
 				clicktype = KM_CLICK;
+				if (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS)) {
+					printf("%s Send click event\n", __func__);
+				}
 			}
 		}
 		else if (event->is_key_pressed) {
 			clicktype = KM_HOLD;
+			if (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS)) {
+				printf("%s Send hold event\n", __func__);
+			}
 
 			/* the event we send in this case is a "dummy" event - don't send value */
 			event->val = 0;

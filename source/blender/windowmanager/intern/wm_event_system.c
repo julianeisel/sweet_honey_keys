@@ -3013,6 +3013,9 @@ static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
 		{
 			if ((PIL_check_seconds_timer() - event_state->prevclicktime) * 1000 < U.dbl_click_time) {
 				retval = KM_DBL_CLICK;
+				if (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS)) {
+					printf("%s Send double click event\n", __func__);
+				}
 			}
 		}
 	}
