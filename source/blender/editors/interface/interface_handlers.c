@@ -8952,6 +8952,7 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 
 		switch (event->type) {
 			case MOUSEMOVE:
+				/* verify we have a real mousemove */
 				if (event->x == event->prevx && event->y == event->prevy)
 					break;
 
@@ -8980,7 +8981,7 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 				break;
 
 			case LEFTMOUSE:
-				if (is_click_style) {
+				if (is_click_style && event->val != event->prevval) {
 					if (block->pie_data.flags & UI_PIE_INVALID_DIR) {
 						menu->menuretval = UI_RETURN_CANCEL;
 					}

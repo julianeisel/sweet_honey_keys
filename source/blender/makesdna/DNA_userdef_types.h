@@ -451,7 +451,7 @@ typedef struct UserDef {
 	
 	short gameflags;
 	short wheellinescroll;
-	short pad2;
+	short pad3;
 	int uiflag, uiflag2;
 	int language;
 	short userpref, viewzoom;
