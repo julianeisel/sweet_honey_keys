@@ -2807,6 +2807,8 @@ void UI_pie_menu_end(bContext *C, uiPieMenu *pie)
 	menu->popup = true;
 	menu->towardstime = PIL_check_seconds_timer();
 
+	window->lock_pie_event = 0;
+
 	UI_popup_handlers_add(C, &window->modalhandlers, menu, true);
 	WM_event_add_mousemove(C);
 
