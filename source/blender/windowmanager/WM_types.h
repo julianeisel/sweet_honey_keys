@@ -425,7 +425,6 @@ typedef struct wmGesture {
 
 /* each event should have full modifier state */
 /* event comes from eventmanager and from keymap */
-/* XXX why is pad needed here? Seems like it can be removed */
 typedef struct wmEvent {
 	struct wmEvent *next, *prev;
 	

@@ -8981,10 +8981,10 @@ static int ui_pie_handler(bContext *C, const wmEvent *event, uiPopupBlockHandle 
 				break;
 
 			case LEFTMOUSE:
-				/* the clicktype test sends two events on KM_CLICK - without checking
-				 * for prevval nested pies may be destroyed even before they are drawn */
-				if (is_click_style && event->val != event->prevval) {
-					if (block->pie_data.flags & UI_PIE_INVALID_DIR) {
+				if (is_click_style) {
+					/* the clicktype test sends a second event on KM_CLICK that
+					 * may destroy nested pies even before they are drawn */
+					if (block->pie_data.flags & UI_PIE_INVALID_DIR && event->clicktype != KM_CLICK) {
 						menu->menuretval = UI_RETURN_CANCEL;
 					}
 					else {
