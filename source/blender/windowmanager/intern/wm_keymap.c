@@ -434,10 +434,32 @@ wmKeyMapItem *WM_keymap_verify_item(wmKeyMap *keymap, const char *idname, int ty
 /* always add item */
 wmKeyMapItem *WM_keymap_add_item(wmKeyMap *keymap, const char *idname, int type, int val, int modifier, int keymodifier)
 {
+	wmWindowManager *wm = G.main->wm.first;
 	wmKeyMapItem *kmi = MEM_callocN(sizeof(wmKeyMapItem), "keymap entry");
-	
+
 	BLI_addtail(&keymap->items, kmi);
 	BLI_strncpy(kmi->idname, idname, OP_MAX_TYPENAME);
+
+	/* only needed for default keymaps */
+	if (wm != NULL && !(keymap->flag & KEYMAP_USER)) {
+		wmKeyMap *keymap_other;
+		/* XXX userconf */
+		for (keymap_other = wm->addonconf->keymaps.first; keymap_other; keymap_other = keymap_other->next) {
+			if (STREQ(keymap->idname, keymap_other->idname)) {
+				wmKeyMapItem *item;
+				for (item = keymap_other->items.first; item; item = item->next) {
+					if (item->type == type) { /* XXX modifier keys */
+						if (item->val == KM_HOLD && val != KM_CLICK) {
+							val = KM_CLICK;
+							if (G.debug & G_DEBUG_WM)
+								printf("Sticky Keys Helper: Adjust the value of %s (%s) to KM_CLICK\n",
+								       kmi->idname, keymap->idname);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	keymap_event_set(kmi, type, val, modifier, keymodifier);
 	wm_keymap_item_properties_set(kmi);

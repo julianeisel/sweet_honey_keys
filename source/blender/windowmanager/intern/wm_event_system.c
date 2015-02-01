@@ -2017,6 +2017,7 @@ static int wm_handlers_do(bContext *C, wmEvent *event, ListBase *handlers)
 		if (wm_action_not_handled(action)) {
 			wmWindow *win = CTX_wm_window(C);
 
+			/* XXX check if those double click hacks can be removed/improved since clicktype was introduced */
 			if (win && win->eventstate->prevtype == event->type) {
 				if (event->clicktype == KM_DBL_CLICK) {
 					event->val = KM_PRESS;
