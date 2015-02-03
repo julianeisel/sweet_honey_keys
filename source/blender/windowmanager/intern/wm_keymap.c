@@ -440,21 +440,30 @@ wmKeyMapItem *WM_keymap_add_item(wmKeyMap *keymap, const char *idname, int type,
 	BLI_addtail(&keymap->items, kmi);
 	BLI_strncpy(kmi->idname, idname, OP_MAX_TYPENAME);
 
-	/* only needed for default keymaps */
-	if (wm != NULL && !(keymap->flag & KEYMAP_USER)) {
-		wmKeyMap *keymap_other;
-		/* XXX userconf */
-		for (keymap_other = wm->addonconf->keymaps.first; keymap_other; keymap_other = keymap_other->next) {
-			if (STREQ(keymap->idname, keymap_other->idname)) {
-				wmKeyMapItem *item;
-				for (item = keymap_other->items.first; item; item = item->next) {
-					if (item->type == type) { /* XXX modifier keys */
-						if (item->val == KM_HOLD && val != KM_CLICK) {
-							val = KM_CLICK;
-							if (G.debug & G_DEBUG_WM)
-								printf("Sticky Keys Helper: Adjust the value of %s (%s) to KM_CLICK\n",
-								       kmi->idname, keymap->idname);
-						}
+	/* Search through the addonmap for items that have the same type and modifiers, but are
+	 * set to KM_CLICK or KM_HOLD, and adjust the added item's value to be the counterpart of it
+	 * (e.g. if the addon item is KM_CLICK, the added item is set to KM_HOLD and vice versa).
+	 * This way addons can create sticky keys (vital since addons can't modify default keymap) */
+	if (!(keymap->flag & KEYCONF_USER)) {
+		wmKeyMap *addonmap = WM_keymap_list_find(&wm->addonconf->keymaps, keymap->idname,
+		                                         keymap->spaceid, keymap->regionid);
+		if (addonmap && addonmap != keymap) {
+			wmKeyMapItem *kmi_addon;
+			for (kmi_addon = addonmap->items.last; kmi_addon; kmi_addon = kmi_addon->prev) {
+				if (kmi_addon->type == type && ELEM(kmi_addon->val, KM_CLICK, KM_HOLD)) {
+					if (kmi_addon->val == KM_CLICK) {
+						val = KM_HOLD;
+						if (G.debug & G_DEBUG_WM)
+							printf("%s: Adjust the value of %s (%s) to KM_HOLD\n",
+							       __func__, kmi->idname, keymap->idname);
+						break;
+					}
+					else {
+						val = KM_CLICK;
+						if (G.debug & G_DEBUG_WM)
+							printf("%s: Adjust the value of %s (%s) to KM_CLICK\n",
+							       __func__, kmi->idname, keymap->idname);
+						break;
 					}
 				}
 			}
@@ -1395,7 +1404,6 @@ void WM_keyconfig_update(wmWindowManager *wm)
 
 		/* in case of old non-diff keymaps, force extra update to create diffs */
 		compat_update = compat_update || (usermap && !(usermap->flag & KEYMAP_DIFF));
-
 	}
 
 	wm_keymap_update_flag &= ~WM_KEYMAP_UPDATE_RECONFIGURE;
