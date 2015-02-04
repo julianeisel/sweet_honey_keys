@@ -443,7 +443,7 @@ wmKeyMapItem *WM_keymap_add_item(wmKeyMap *keymap, const char *idname, int type,
 	/* Search through the addonmap for items that have the same type and modifiers, but are
 	 * set to KM_CLICK or KM_HOLD, and adjust the added item's value to be the counterpart of it
 	 * (e.g. if the addon item is KM_CLICK, the added item is set to KM_HOLD and vice versa).
-	 * This way addons can create sticky keys (vital since addons can't modify default keymap) */
+	 * This way addons can create sticky keys (vital since addons can't access default keymap) */
 	if (!(keymap->flag & KEYCONF_USER)) {
 		wmKeyMap *addonmap = WM_keymap_list_find(&wm->addonconf->keymaps, keymap->idname,
 		                                         keymap->spaceid, keymap->regionid);
