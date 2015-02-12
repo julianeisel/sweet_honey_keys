@@ -1052,17 +1052,17 @@ class USERPREF_PT_input(Panel):
         subrow.menu("USERPREF_MT_interaction_presets", text=bpy.types.USERPREF_MT_interaction_presets.bl_label)
         subrow.operator("wm.interaction_preset_add", text="", icon='ZOOMIN')
         subrow.operator("wm.interaction_preset_add", text="", icon='ZOOMOUT').remove_active = True
-        
+
         sub.separator()
 
         sub = col.column()
-        sub.label(text="Click/Hold:")
-        sub.prop(inputs, "click_timeout")
         sub.label(text="Double Click:")
         sub.prop(inputs, "double_click_time", text="Speed")
+        sub.label(text="Sticky Keys:")
+        sub.prop(inputs, "click_timeout")
 
         sub.separator()
-        
+
         sub.label(text="Mouse:")
         sub1 = sub.column()
         sub1.active = (inputs.select_mouse == 'RIGHT')

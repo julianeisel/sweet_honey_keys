@@ -277,7 +277,7 @@ static int eyedropper_modal(bContext *C, wmOperator *op, const wmEvent *event)
 			eyedropper_cancel(C, op);
 			return OPERATOR_CANCELLED;
 		case LEFTMOUSE:
-			/* two release events are sent on KM_CLICK, so make sure second one is ignored */
+			/* two release events are sent on KM_CLICK, so ignore second one */
 			if (event->clicktype == KM_CLICK) {
 				break;
 			}

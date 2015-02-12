@@ -446,12 +446,12 @@ typedef struct UserDef {
 	short timecode_style;		/* style of timecode display */
 	
 	short versions;
-	short click_timeout;
 	short dbl_click_time;
-	
+	short click_timeout;
+	short pad3;
+
 	short gameflags;
 	short wheellinescroll;
-	short pad3;
 	int uiflag, uiflag2;
 	int language;
 	short userpref, viewzoom;
@@ -468,7 +468,7 @@ typedef struct UserDef {
 	short transopts;
 	short menuthreshold1, menuthreshold2;
 	int pad4;
-	
+
 	struct ListBase themes;
 	struct ListBase uifonts;
 	struct ListBase uistyles;
