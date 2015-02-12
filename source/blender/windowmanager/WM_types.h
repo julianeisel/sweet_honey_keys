@@ -448,7 +448,6 @@ typedef struct wmEvent {
 	int prevx, prevy;
 	double prevclicktime;
 	int prevclickx, prevclicky;
-	short prevclicktype;
 	
 	/* modifier states */
 	short shift, ctrl, alt, oskey;	/* oskey is apple or windowskey, value denotes order of pressed */
