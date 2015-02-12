@@ -1461,7 +1461,7 @@ static int wm_eventmatch(wmEvent *winevent, wmKeyMapItem *kmi)
 	/* KM_ANY excludes clicktype events - filter them out */
 	if (kmi->val == KM_ANY && winevent->clicktype) return 0;
 
-	if (kmi->val != KM_ANY/* && (kmi->val < KM_RELEASE)*/)
+	if (kmi->val != KM_ANY)
 		if (!ELEM(kmi->val, winevent->val, winevent->clicktype)) return 0;
 
 	/* modifiers also check bits, so it allows modifier order */
