@@ -2982,6 +2982,49 @@ static wmWindow *wm_event_cursor_other_windows(wmWindowManager *wm, wmWindow *wi
 	return NULL;
 }
 
+/* Clicktype test
+ *
+ * We have 3 different clicktypes: 'KM_CLICK', 'KM_HOLD' and 'KM_DBL_CLICK'.
+ * Time is used to determine, what to send. It works as follows:
+ * KM_RELEASE && time since first KM_PRESS < U.click_timeout → send KM_CLICK
+ * KM_PRESS && time since first KM_PRESS > U.click_timeout → send KM_HOLD
+ * KM_PRESS after a KM_RELEASE && time since previous KM_PRESS < U.dbl_click_time → send KM_DBL_CLICK
+ *
+ * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_set (wm_window.c) */
+static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
+{
+	short clicktype = 0;
+
+	if (event->val == KM_PRESS &&
+	    (event_state->prevval != KM_PRESS || event->prevtype != win->eventstate->prevtype))
+	{
+		event_state->prevclicktime = event->clicktime;
+		event_state->prevclickx = event->x;
+		event_state->prevclicky = event->y;
+	}
+
+	/* double click */
+	if (event->type == event_state->prevtype &&
+		event_state->prevval == KM_RELEASE &&
+		event->val == KM_PRESS)
+	{
+		if ((ISMOUSE(event->type) == false) || ((ABS(event->x - event_state->prevclickx)) <= 2 &&
+		                                        (ABS(event->y - event_state->prevclicky)) <= 2))
+		{
+			if ((PIL_check_seconds_timer() - event_state->prevclicktime) * 1000 < U.dbl_click_time) {
+				clicktype = KM_DBL_CLICK;
+				if (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS)) {
+					printf("%s Send double click event\n", __func__);
+				}
+			}
+		}
+	}
+
+	if (clicktype != event->clicktype) {
+		event_state->clicktype = event->clicktype = clicktype;
+	}
+}
+
 static void wm_event_add_mousemove(wmWindow *win, const wmEvent *event)
 {
 	wmEvent *event_last = win->queue.last;
@@ -3001,57 +3044,6 @@ static void wm_event_add_mousemove(wmWindow *win, const wmEvent *event)
 		}
 
 		copy_v2_v2_int(&event_new->prevx, &event_last->x);
-	}
-}
-
-static int wm_event_clicktype_get(wmEvent *event, wmEvent *event_state)
-{
-	short retval = 0;
-
-	if (event->type == event_state->prevtype &&
-		event_state->prevval == KM_RELEASE &&
-		event->val == KM_PRESS)
-	{
-		if ((ISMOUSE(event->type) == false) || ((ABS(event->x - event_state->prevclickx)) <= 2 &&
-		                                        (ABS(event->y - event_state->prevclicky)) <= 2))
-		{
-			if ((PIL_check_seconds_timer() - event_state->prevclicktime) * 1000 < U.dbl_click_time) {
-				retval = KM_DBL_CLICK;
-				if (G.debug & (G_DEBUG_HANDLERS | G_DEBUG_EVENTS)) {
-					printf("%s Send double click event\n", __func__);
-				}
-			}
-		}
-	}
-
-	return retval;
-}
-
-/* Clicktype test
- *
- * We have 3 different clicktypes: 'KM_CLICK', 'KM_HOLD' and 'KM_DBL_CLICK'.
- * Time is used to determine, what to send. It works as follows:
- * KM_RELEASE && time since first KM_PRESS < U.click_timeout → send KM_CLICK
- * KM_PRESS && time since first KM_PRESS > U.click_timeout → send KM_HOLD
- * KM_PRESS after a KM_RELEASE && time since previous KM_PRESS < U.dbl_click_time → send KM_DBL_CLICK
- *
- * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_set (wm_window.c) */
-static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
-{
-	short clicktype;
-
-	if (event->val == KM_PRESS &&
-	    (event_state->prevval != KM_PRESS || event->prevtype != win->eventstate->prevtype))
-	{
-		event_state->prevclicktime = event->clicktime;
-		event_state->prevclickx = event->x;
-		event_state->prevclicky = event->y;
-	}
-
-	clicktype = wm_event_clicktype_get(event, event_state);
-
-	if (clicktype != event->clicktype) {
-		event_state->clicktype = event->clicktype = clicktype;
 	}
 }
 
