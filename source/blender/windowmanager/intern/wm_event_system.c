@@ -3005,8 +3005,8 @@ static void wm_event_clicktype_test(wmWindow *win, wmEvent *event, wmEvent *even
 
 	/* double click */
 	if (event->type == event_state->prevtype &&
-		event_state->prevval == KM_RELEASE &&
-		event->val == KM_PRESS)
+	    event_state->prevval == KM_RELEASE &&
+	    event->val == KM_PRESS)
 	{
 		if ((ISMOUSE(event->type) == false) || ((ABS(event->x - event_state->prevclickx)) <= 2 &&
 		                                        (ABS(event->y - event_state->prevclicky)) <= 2))

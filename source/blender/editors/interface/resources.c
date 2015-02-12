@@ -2594,7 +2594,7 @@ void init_userdef_do_versions(void)
 			cp[3] = 255;
 		}
 	}
-	
+
 	if (U.versionfile < 273 || (U.versionfile == 273 && U.subversionfile < 8)) {
 		if (U.click_timeout == 0)
 			U.click_timeout = 250;
