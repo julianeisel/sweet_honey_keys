@@ -3456,12 +3456,10 @@ static void tweak_gesture_modal(bContext *C, const wmEvent *event)
 			if (gesture->event_type == event->type) {
 				WM_gesture_end(C, gesture);
 
-#if 0 /* XXX Why? Disabled for now, as this conflicts with combined use of KM_HOLD and KM_RELEASE */
 				/* when tweak fails we should give the other keymap entries a chance */
 
 				/* XXX, assigning to readonly, BAD JUJU! */
 				((wmEvent *)event)->val = KM_RELEASE;
-#endif
 			}
 			break;
 		default:
