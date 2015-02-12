@@ -2991,7 +2991,7 @@ static wmWindow *wm_event_cursor_other_windows(wmWindowManager *wm, wmWindow *wi
  * KM_PRESS after a KM_RELEASE && time since previous KM_PRESS < U.dbl_click_time → send KM_DBL_CLICK
  *
  * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_set (wm_window.c) */
-static void wm_event_clicktype_set(wmWindow *win, wmEvent *event, wmEvent *event_state)
+static void wm_event_clicktype_test(wmWindow *win, wmEvent *event, wmEvent *event_state)
 {
 	short clicktype = 0;
 
@@ -3155,7 +3155,7 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			evt->type = event.type;
 
 			/* clicktype */
-			wm_event_clicktype_set(win, &event, evt);
+			wm_event_clicktype_test(win, &event, evt);
 
 			if (win->active == 0) {
 				int cx, cy;
@@ -3207,7 +3207,7 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 			evt->type = event.type;
 
 			/* clicktype */
-			wm_event_clicktype_set(win, &event, evt);
+			wm_event_clicktype_test(win, &event, evt);
 
 			/* exclude arrow keys, esc, etc from text input */
 			if (type == GHOST_kEventKeyUp) {
