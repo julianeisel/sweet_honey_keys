@@ -434,41 +434,10 @@ wmKeyMapItem *WM_keymap_verify_item(wmKeyMap *keymap, const char *idname, int ty
 /* always add item */
 wmKeyMapItem *WM_keymap_add_item(wmKeyMap *keymap, const char *idname, int type, int val, int modifier, int keymodifier)
 {
-	wmWindowManager *wm = G.main->wm.first;
 	wmKeyMapItem *kmi = MEM_callocN(sizeof(wmKeyMapItem), "keymap entry");
 
 	BLI_addtail(&keymap->items, kmi);
 	BLI_strncpy(kmi->idname, idname, OP_MAX_TYPENAME);
-
-	/* Search through the addonmap for items that have the same type and modifiers, but are
-	 * set to KM_CLICK or KM_HOLD, and adjust the added item's value to be the counterpart of it
-	 * (e.g. if the addon item is KM_CLICK, the added item is set to KM_HOLD and vice versa).
-	 * This way addons can create sticky keys (vital since addons can't access default keymap) */
-	if (!(keymap->flag & KEYCONF_USER)) {
-		wmKeyMap *addonmap = WM_keymap_list_find(&wm->addonconf->keymaps, keymap->idname,
-		                                         keymap->spaceid, keymap->regionid);
-		if (addonmap && addonmap != keymap) {
-			wmKeyMapItem *kmi_addon;
-			for (kmi_addon = addonmap->items.last; kmi_addon; kmi_addon = kmi_addon->prev) {
-				if (kmi_addon->type == type && ELEM(kmi_addon->val, KM_CLICK, KM_HOLD)) {
-					if (kmi_addon->val == KM_CLICK) {
-						val = KM_HOLD;
-						if (G.debug & G_DEBUG_WM)
-							printf("%s: Adjust the value of %s (%s) to KM_HOLD\n",
-							       __func__, kmi->idname, keymap->idname);
-						break;
-					}
-					else {
-						val = KM_CLICK;
-						if (G.debug & G_DEBUG_WM)
-							printf("%s: Adjust the value of %s (%s) to KM_CLICK\n",
-							       __func__, kmi->idname, keymap->idname);
-						break;
-					}
-				}
-			}
-		}
-	}
 
 	keymap_event_set(kmi, type, val, modifier, keymodifier);
 	wm_keymap_item_properties_set(kmi);

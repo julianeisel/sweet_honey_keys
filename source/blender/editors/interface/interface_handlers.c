@@ -9174,17 +9174,11 @@ static int ui_region_handler(bContext *C, const wmEvent *event, void *UNUSED(use
 			retval = ui_handle_button_event(C, event, but);
 		}
 		else {
-			/* let's make sure we really don't have a button
-			 * add a mouse move and try again!
-			 * - XXX some WM_event_add_mousemove calls may become unnecessary with this and can be removed */
+			retval = ui_handle_button_over(C, event, ar);
+
+			/* let's make sure we are really not hovering a button by adding a mousemove!
+			 * XXX some WM_event_add_mousemove calls may become unnecessary with this and can be removed */
 			WM_event_add_mousemove(C);
-			but = ui_but_find_active_in_region(ar);
-			if (but) {
-				retval = ui_handle_button_event(C, event, but);
-			}
-			else {
-				retval = ui_handle_button_over(C, event, ar);
-			}
 		}
 	}
 
