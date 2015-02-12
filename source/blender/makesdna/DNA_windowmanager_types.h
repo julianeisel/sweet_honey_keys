@@ -189,7 +189,7 @@ typedef struct wmWindow {
 	short cursor;       /* current mouse cursor type */
 	short lastcursor;   /* previous cursor when setting modal one */
 	short modalcursor;  /* the current modal cursor */
-	short grabcursor;   /* cursor grab mode */
+	short grabcursor;           /* cursor grab mode */
 	short addmousemove; /* internal: tag this for extra mousemove event, makes cursors/buttons active on UI switching */
 
 	int winid;                  /* winid also in screens, is for retrieving this window after read */
