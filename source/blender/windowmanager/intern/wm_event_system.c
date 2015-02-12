@@ -2990,7 +2990,7 @@ static wmWindow *wm_event_cursor_other_windows(wmWindowManager *wm, wmWindow *wi
  * KM_PRESS && time since first KM_PRESS > U.click_timeout → send KM_HOLD
  * KM_PRESS after a KM_RELEASE && time since previous KM_PRESS < U.dbl_click_time → send KM_DBL_CLICK
  *
- * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_set (wm_window.c) */
+ * Note: only KM_DBL_CLICK is handled here, rest in wm_window_event_clicktype_test (wm_window.c) */
 static void wm_event_clicktype_test(wmWindow *win, wmEvent *event, wmEvent *event_state)
 {
 	short clicktype = 0;

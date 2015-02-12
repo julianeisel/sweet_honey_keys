@@ -1092,7 +1092,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 	return 1;
 }
 
-/* KM_DBL_CLICK is set in wm_event_clicktype_set (wm_event_system.c)
+/* KM_DBL_CLICK is set in wm_event_clicktype_test (wm_event_system.c)
  * Normally, this should be there too, but for KM_CLICK/KM_HOLD, we need a
  * time precision of a few milliseconds, which we can't get from there */
 static void wm_window_event_clicktype_test(const bContext *C)
@@ -1210,7 +1210,7 @@ void wm_window_process_events(const bContext *C)
 
 	/* not nice to have this here, but it's the only place
 	 * that can call it with the needed time precision */
-	wm_window_event_clicktype_set(C);
+	wm_window_event_clicktype_test(C);
 
 	hasevent |= wm_window_timer(C);
 
